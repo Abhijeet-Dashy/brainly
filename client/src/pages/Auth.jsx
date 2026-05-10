@@ -60,17 +60,18 @@ export default function AuthPage() {
 
   return (
     <main className="flex min-h-screen font-inter bg-[#f5f5f5] dark:bg-[#0a0a0a] text-black dark:text-white selection:bg-black selection:text-white dark:selection:bg-white dark:selection:text-black transition-colors duration-300">
-      {/* Left Panel: Editorial Visual (45%) */}
       <section className="hidden lg:flex w-[45%] sticky top-0 h-screen flex-col justify-between p-12 border-r-[3px] border-black dark:border-white relative bg-[#e0e0e0] dark:bg-[#111111] transition-colors">
-        {/* Halftone & Grain Background */}
         <div className="absolute inset-0 halftone-bg opacity-40 dark:opacity-20 pointer-events-none"></div>
         <div className="absolute inset-0 grain-overlay opacity-[0.04] dark:opacity-[0.06] pointer-events-none"></div>
 
         <div className="z-10 relative">
           <div className="flex items-center gap-3">
-            <span className="text-2xl font-black tracking-tighter uppercase border-[3px] border-black dark:border-white px-3 py-1 bg-[#f5f5f5] dark:bg-[#0a0a0a] shadow-[4px_4px_0_0_rgba(0,0,0,1)] dark:shadow-[4px_4px_0_0_rgba(255,255,255,1)] transition-colors">
+            <button
+              className="text-2xl font-black tracking-tighter uppercase border-[3px] border-black dark:border-white px-3 py-1 bg-[#f5f5f5] dark:bg-[#0a0a0a] shadow-[4px_4px_0_0_rgba(0,0,0,1)] dark:shadow-[4px_4px_0_0_rgba(255,255,255,1)] transition-colors cursor-pointer"
+              onClick={() => navigate("/")}
+            >
               Brainly
-            </span>
+            </button>
           </div>
         </div>
 
