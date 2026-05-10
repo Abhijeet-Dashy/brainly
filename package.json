@@ -1,6 +1,6 @@
 {
-  "name": "devlink",
-  "version": "1.0.0",
+  "name": "brainly",
+  "version": "1.1.0",
   "private": true,
   "scripts": {
     "install:server": "npm install --prefix server",

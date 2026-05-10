@@ -1,13 +1,13 @@
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
-    id: "saveToDevLink",
-    title: "Capture to DevLink Console",
+    id: "saveToBrainly",
+    title: "Capture to Brainly Console",
     contexts: ["selection", "link", "image"]
   });
 });
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (info.menuItemId === "saveToDevLink") {
+  if (info.menuItemId === "saveToBrainly") {
     let capturedData = "";
     let dataType = "text";
 

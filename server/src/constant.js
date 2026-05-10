@@ -1,1 +1,1 @@
-export const DB_NAME = "DevLinkDB";
+export const DB_NAME = "BrainlyDB";

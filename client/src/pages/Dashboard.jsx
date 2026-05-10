@@ -96,7 +96,7 @@ export default function Dashboard() {
           <div>
             <Link to="/">
               <h1 className="text-xl font-black text-black dark:text-white tracking-tighter uppercase mb-0.5">
-                DevLink
+                Brainly
               </h1>
             </Link>
             <p className="text-[9px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">

@@ -8,7 +8,7 @@ document.addEventListener("copy", async () => {
            const selection = document.getSelection().toString().trim();
            if (!selection) return;
            
-            // Check if DevLink Extension is Authenticated
+            // Check if Brainly Extension is Authenticated
            const { token, lastUsedFolderId } = await chrome.storage.local.get(["token", "lastUsedFolderId"]);
 
             // Stash locally in case they open popup instead
@@ -17,9 +17,9 @@ document.addEventListener("copy", async () => {
            // Inject Floating Prompt
            const selectionObj = document.getSelection();
            const rect = selectionObj.rangeCount > 0 ? selectionObj.getRangeAt(0).getBoundingClientRect() : null;
-           showDevLinkToast(selection, token || null, lastUsedFolderId || null, rect);
+           showBrainlyToast(selection, token || null, lastUsedFolderId || null, rect);
        } catch(error) { 
-           console.warn("DevLink Auto-Capture Error", error); 
+           console.warn("Brainly Auto-Capture Error", error); 
        }
     }, 50);
 });
@@ -30,14 +30,14 @@ const detectType = (text) => {
    return "text";
 };
 
-function showDevLinkToast(text, token, lastUsedFolderId, rect) {
+function showBrainlyToast(text, token, lastUsedFolderId, rect) {
    // Remove any existing toast
-   const existing = document.getElementById("devlink-toast-host");
+   const existing = document.getElementById("brainly-toast-host");
    if (existing) existing.remove();
 
    // Create Host DOM node globally
    const host = document.createElement("div");
-   host.id = "devlink-toast-host";
+   host.id = "brainly-toast-host";
    host.style.position = "fixed";
    host.style.zIndex = "2147483647"; // Max z-index
 
@@ -150,7 +150,7 @@ function showDevLinkToast(text, token, lastUsedFolderId, rect) {
       <div class="toast-body hidden" id="toastBody">
          <span class="label-text">Select Destination</span>
          <select id="folderSelect">
-            <option value="" disabled selected>Ping DevLink...</option>
+            <option value="" disabled selected>Ping Brainly...</option>
          </select>
          <button class="commit-btn" id="commitBtn">Commit Block</button>
       </div>

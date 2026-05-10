@@ -11,10 +11,10 @@ export default function TopBar() {
       {/* Breadcrumbs */}
       <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 font-medium">
         <div className="px-1.5 py-1 rounded hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition-colors flex items-center gap-2">
-          <span className="text-gray-900 dark:text-gray-200">DevLink</span>
+          <span className="text-gray-900 dark:text-gray-200">Brainly</span>
         </div>
         <div className="text-gray-300 dark:text-gray-600">/</div>
-        <div className="px-1.5 py-1 rounded hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition-colors flex items-center gap-2">
+        <div className="px-1.5 py-1 hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition-colors flex items-center gap-2">
           <span className="text-gray-900 dark:text-gray-200 truncate max-w-[200px]">
             Dashboard Home
           </span>

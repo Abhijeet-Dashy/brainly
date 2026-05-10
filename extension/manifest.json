@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "DevLink Saver",
+  "name": "Brainly Saver",
   "version": "1.0",
   "permissions": ["storage", "activeTab", "scripting", "contextMenus"],
   "host_permissions": [

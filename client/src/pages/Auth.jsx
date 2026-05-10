@@ -1,10 +1,15 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 import toast from "react-hot-toast";
 
 export default function AuthPage() {
-  const [isLogin, setIsLogin] = useState(true);
+  const location = useLocation();
+  const [isLogin, setIsLogin] = useState(location.pathname !== "/register");
+
+  useEffect(() => {
+    setIsLogin(location.pathname !== "/register");
+  }, [location.pathname]);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,7 +55,7 @@ export default function AuthPage() {
         <div className="z-10 relative">
           <div className="flex items-center gap-3">
             <span className="text-2xl font-black tracking-tighter uppercase border-[3px] border-black dark:border-white px-3 py-1 bg-[#f5f5f5] dark:bg-[#0a0a0a] shadow-[4px_4px_0_0_rgba(0,0,0,1)] dark:shadow-[4px_4px_0_0_rgba(255,255,255,1)] transition-colors">
-              DevLink
+              Brainly
             </span>
           </div>
         </div>
@@ -93,7 +98,7 @@ export default function AuthPage() {
         {/* Mobile Header elements if needed */}
         <div className="absolute top-8 left-8 lg:hidden z-20">
           <span className="text-2xl font-black tracking-tighter uppercase px-2 py-1 bg-[#f5f5f5] dark:bg-[#0a0a0a] border-2 border-black dark:border-white shadow-[4px_4px_0_0_rgba(0,0,0,1)] dark:shadow-[4px_4px_0_0_rgba(255,255,255,1)] transition-colors">
-            DevLink
+            Brainly
           </span>
         </div>
 
