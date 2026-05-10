@@ -1,62 +1,32 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
-import { GoogleLogin } from "@react-oauth/google";
+import { useGoogleLogin } from "@react-oauth/google";
 import toast from "react-hot-toast";
 
 export default function AuthPage() {
-  const location = useLocation();
-  const [isLogin, setIsLogin] = useState(location.pathname !== "/register");
-
-  useEffect(() => {
-    setIsLogin(location.pathname !== "/register");
-  }, [location.pathname]);
-  const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const login = useAuthStore((state) => state.login);
-  const register = useAuthStore((state) => state.register);
   const loginWithGoogle = useAuthStore((state) => state.loginWithGoogle);
   const navigate = useNavigate();
 
-  const handleGoogleSuccess = async (credentialResponse) => {
-    setLoading(true);
-    const res = await loginWithGoogle(credentialResponse.credential);
-    if (res.success) {
-      toast.success("Welcome!");
-      navigate("/dashboard");
-    } else {
-      toast.error(res.error || "Google login failed");
-    }
-    setLoading(false);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
-    if (isLogin) {
-      const res = await login(email, password);
+  const handleGoogleLogin = useGoogleLogin({
+    flow: 'auth-code',
+    scope: 'https://www.googleapis.com/auth/drive.file',
+    onSuccess: async (codeResponse) => {
+      setLoading(true);
+      const res = await loginWithGoogle(codeResponse.code);
       if (res.success) {
-        toast.success("Welcome back!");
+        toast.success("Welcome!");
         navigate("/dashboard");
       } else {
-        toast.error(res.error || "Login failed");
+        toast.error(res.error || "Google login failed");
       }
-    } else {
-      const res = await register(email, password, username);
-      if (res.success) {
-        setIsLogin(true); // Switch to login after successful register
-        toast.success("Registration successful! Please login.");
-      } else {
-        toast.error(res.error || "Registration failed");
-      }
+      setLoading(false);
+    },
+    onError: () => {
+      toast.error("Google login failed");
     }
-    setLoading(false);
-  };
+  });
 
   return (
     <main className="flex min-h-screen font-inter bg-[#f5f5f5] dark:bg-[#0a0a0a] text-black dark:text-white selection:bg-black selection:text-white dark:selection:bg-white dark:selection:text-black transition-colors duration-300">
@@ -120,162 +90,38 @@ export default function AuthPage() {
         <div className="w-full max-w-md relative z-10 mt-16 lg:mt-0">
           <div className="mb-12">
             <h2 className="text-4xl sm:text-5xl font-black tracking-tight uppercase mb-4 text-black dark:text-white transition-colors">
-              {isLogin ? "Welcome Back" : "Join Us"}
+              Access Granted.
             </h2>
             <p className="text-gray-600 dark:text-gray-400 font-bold text-lg transition-colors">
-              {isLogin
-                ? "Continue the documentation."
-                : "Initialize your structural vault."}
+              Sync your technical library directly to Google Drive.
             </p>
           </div>
 
-          {/* Toggle Button */}
-          <div className="flex border-[3px] border-black dark:border-white bg-[#f5f5f5] dark:bg-[#0a0a0a] mb-10 shadow-[6px_6px_0_0_rgba(0,0,0,1)] dark:shadow-[6px_6px_0_0_rgba(255,255,255,1)] overflow-hidden transition-colors">
-            <button
-              onClick={() => setIsLogin(true)}
-              className={`flex-1 py-4 text-sm font-black uppercase tracking-widest transition-all ${
-                isLogin
-                  ? "bg-black dark:bg-white text-white dark:text-black"
-                  : "bg-transparent text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white"
-              }`}
-            >
-              Sign In
-            </button>
-            <div className="w-[3px] bg-black dark:bg-white transition-colors"></div>
-            <button
-              onClick={() => setIsLogin(false)}
-              className={`flex-1 py-4 text-sm font-black uppercase tracking-widest transition-all ${
-                !isLogin
-                  ? "bg-black dark:bg-white text-white dark:text-black"
-                  : "bg-transparent text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white"
-              }`}
-            >
-              Register
-            </button>
-          </div>
-
-          {/* Auth Form */}
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {!isLogin && (
-              <div className="space-y-2">
-                <label className="text-sm font-black tracking-widest uppercase text-black dark:text-white block transition-colors">
-                  Username
-                </label>
-                <div className="relative">
-                  <input
-                    className="w-full bg-[#f5f5f5] dark:bg-[#0a0a0a] border-[3px] border-black dark:border-white py-4 px-4 text-black dark:text-white font-medium placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-0 focus:shadow-[6px_6px_0_0_rgba(0,0,0,1)] dark:focus:shadow-[6px_6px_0_0_rgba(255,255,255,1)] transition-all"
-                    placeholder="Enter your username"
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required={!isLogin}
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <label className="text-sm font-black tracking-widest uppercase text-black dark:text-white block transition-colors">
-                Email Address
-              </label>
-              <div className="relative">
-                <input
-                  className="w-full bg-[#f5f5f5] dark:bg-[#0a0a0a] border-[3px] border-black dark:border-white py-4 px-4 text-black dark:text-white font-medium placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-0 focus:shadow-[6px_6px_0_0_rgba(0,0,0,1)] dark:focus:shadow-[6px_6px_0_0_rgba(255,255,255,1)] transition-all"
-                  placeholder="name@company.com"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex justify-between items-end">
-                <label className="text-sm font-black tracking-widest uppercase text-black dark:text-white block transition-colors">
-                  Password
-                </label>
-                {isLogin && (
-                  <a
-                    className="text-xs font-black uppercase text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white underline decoration-2 underline-offset-4 transition-colors"
-                    href="#"
-                  >
-                    Forgot?
-                  </a>
-                )}
-              </div>
-              <div className="relative">
-                <input
-                  className="w-full bg-[#f5f5f5] dark:bg-[#0a0a0a] border-[3px] border-black dark:border-white py-4 pl-4 pr-12 text-black dark:text-white font-medium placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-0 focus:shadow-[6px_6px_0_0_rgba(0,0,0,1)] dark:focus:shadow-[6px_6px_0_0_rgba(255,255,255,1)] transition-all"
-                  placeholder="••••••••"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-                <button
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors"
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  <span className="material-symbols-outlined text-2xl">
-                    {showPassword ? "visibility_off" : "visibility"}
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 py-4">
-              <input
-                className="w-6 h-6 border-[3px] border-black dark:border-white appearance-none checked:bg-black dark:checked:bg-white checked:after:content-['✓'] checked:after:text-white dark:checked:after:text-black checked:after:font-bold checked:after:block checked:after:text-center checked:after:select-none cursor-pointer transition-colors"
-                id="remember"
-                type="checkbox"
-              />
-              <label
-                className="text-sm font-bold text-gray-600 dark:text-gray-400 scale-y-95 cursor-pointer transition-colors"
-                htmlFor="remember"
-              >
-                {isLogin
-                  ? "Stay signed in for 30 days"
-                  : "I agree to the Terms & Privacy Policy"}
-              </label>
-            </div>
-
-            <button
+          {/* Google Login */}
+          <div className="w-full flex justify-center">
+            <button 
+              onClick={() => handleGoogleLogin()} 
               disabled={loading}
-              className="w-full bg-black dark:bg-[#1a1a1a] text-[#f5f5f5] dark:text-white font-black uppercase tracking-widest py-5 border-[3px] border-black dark:border-white shadow-[8px_8px_0_0_rgba(107,114,128,0.5)] dark:shadow-[8px_8px_0_0_rgba(107,114,128,0.5)] hover:shadow-[12px_12px_0_0_rgba(107,114,128,0.8)] dark:hover:shadow-[12px_12px_0_0_rgba(150,150,150,0.8)] hover:-translate-y-1 transition-all duration-200 disabled:opacity-70 disabled:hover:-translate-y-0 disabled:hover:shadow-[8px_8px_0_0_rgba(107,114,128,0.5)] active:translate-y-1 active:shadow-none"
-              type="submit"
+              className="w-full bg-black dark:bg-[#1a1a1a] text-[#f5f5f5] dark:text-white font-black uppercase tracking-widest py-5 border-[3px] border-black dark:border-white shadow-[8px_8px_0_0_rgba(107,114,128,0.5)] dark:shadow-[8px_8px_0_0_rgba(107,114,128,0.5)] hover:shadow-[12px_12px_0_0_rgba(107,114,128,0.8)] dark:hover:shadow-[12px_12px_0_0_rgba(150,150,150,0.8)] hover:-translate-y-1 transition-all duration-200 disabled:opacity-70 disabled:hover:-translate-y-0 disabled:hover:shadow-[8px_8px_0_0_rgba(107,114,128,0.5)] active:translate-y-1 active:shadow-none flex justify-center items-center gap-3"
             >
               {loading ? (
-                <div className="flex items-center justify-center gap-3">
+                <>
                   <div className="w-5 h-5 border-[3px] border-transparent border-t-[#f5f5f5] dark:border-t-white rounded-full animate-spin"></div>
-                  <span>Waiting...</span>
-                </div>
-              ) : isLogin ? (
-                "Authenticate"
+                  <span>Authenticating...</span>
+                </>
               ) : (
-                "Create Account"
+                <>
+                  <svg className="w-6 h-6 bg-white rounded-full" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                    <path fill="none" d="M1 1h22v22H1z" />
+                  </svg>
+                  <span>Continue with Google</span>
+                </>
               )}
             </button>
-          </form>
-
-          {/* Divider */}
-          <div className="flex items-center gap-4 my-8">
-            <div className="flex-1 h-[3px] bg-black dark:bg-white transition-colors"></div>
-            <span className="text-sm font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Or</span>
-            <div className="flex-1 h-[3px] bg-black dark:bg-white transition-colors"></div>
-          </div>
-
-          {/* Google Login */}
-          <div className="w-full flex justify-center border-[3px] border-black dark:border-white bg-white dark:bg-[#1a1a1a] shadow-[6px_6px_0_0_rgba(0,0,0,1)] dark:shadow-[6px_6px_0_0_rgba(255,255,255,1)] hover:-translate-y-1 transition-all p-1">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => toast.error("Google login failed")}
-              size="large"
-              width="100%"
-              text="continue_with"
-              shape="rectangular"
-            />
           </div>
 
           {/* Footer links */}

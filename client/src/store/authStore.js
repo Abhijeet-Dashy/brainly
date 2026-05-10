@@ -22,57 +22,13 @@ export const useAuthStore = create((set, get) => ({
     set({ loading: false });
   },
 
-  login: async (email, password) => {
-    try {
-      const response = await fetch(`${BASE_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        set({ token: data.data.accessToken, user: data.data.user });
-        localStorage.setItem('token', data.data.accessToken);
-        localStorage.setItem('user', JSON.stringify(data.data.user));
-        return { success: true };
-      } else {
-        return { success: false, error: data.message || "Login failed" };
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      return { success: false, error: "Network error" };
-    }
-  },
 
-  register: async (email, password, username) => {
-    try {
-      const response = await fetch(`${BASE_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, username }),
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        return { success: true };
-      } else {
-        return { success: false, error: data.message || "Registration failed" };
-      }
-    } catch (error) {
-      console.error('Registration error:', error);
-      return { success: false, error: "Network error" };
-    }
-  },
-
-  loginWithGoogle: async (credential) => {
+  loginWithGoogle: async (code) => {
     try {
       const response = await fetch(`${BASE_URL}/api/auth/google`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ credential }),
+        body: JSON.stringify({ code }),
       });
 
       const data = await response.json();

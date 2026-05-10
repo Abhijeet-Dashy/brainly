@@ -2,123 +2,57 @@ import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
-
-export const registerUser = asyncHandler(async (req, res) => {
-  const { username, email, password } = req.body;
-
-  if (!username || !email || !password) {
-    throw new ApiError(400, "All fields are required");
-  }
-
-  const existedUser = await User.findOne({
-    $or: [{ email }, { username }],
-  });
-
-  if (existedUser) {
-    throw new ApiError(400, "User already exists");
-  }
-
-  const user = await User.create({
-    username,
-    email,
-    password,
-  });
-
-  const accessToken = user.generateAccessToken();
-  const refreshToken = user.generateRefreshToken();
-
-  user.refreshToken = refreshToken;
-  await user.save({ validateBeforeSave: false });
-
-  return res.status(201).json(
-    new ApiResponse(201, {
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-      },
-      accessToken,
-      refreshToken,
-    })
-  );
-});
-
-export const loginUser = asyncHandler(async (req, res) => {
-  const {email, password } = req.body;
-
-  if (!password) {
-    throw new ApiError(400, "Password is required");
-  }
-
-  if (!email) {
-    throw new ApiError(400, "email is required");
-  }
-
-  const user = await User.findOne({
-    email,
-  });
-
-  if (!user) {
-    throw new ApiError(404, "User does not exist");
-  }
-
-  const isPasswordValid = await user.isPasswordCorrect(password);
-
-  if (!isPasswordValid) {
-    throw new ApiError(401, "Invalid user credentials");
-  }
-
-  const accessToken = user.generateAccessToken();
-  const refreshToken = user.generateRefreshToken();
-
-  user.refreshToken = refreshToken;
-  await user.save({ validateBeforeSave: false });
-
-  return res.status(200).json(
-    new ApiResponse(200, {
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-      },
-      accessToken,
-      refreshToken,
-    }, "User logged in successfully")
-  );
-});
+import { OAuth2Client } from "google-auth-library";
 
 export const googleAuth = asyncHandler(async (req, res) => {
-  const { credential } = req.body;
+  const { code } = req.body;
 
-  if (!credential) {
-    throw new ApiError(400, "Google credential is required");
+  if (!code) {
+    throw new ApiError(400, "Authorization code is required");
   }
 
-  const { OAuth2Client } = await import("google-auth-library");
-  const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+  // Ensure these match your actual client setup. The redirect_uri must match what the frontend sends (usually 'postmessage' for useGoogleLogin)
+  const client = new OAuth2Client(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    'postmessage'
+  );
 
-  let payload;
+  let tokens;
   try {
-    const ticket = await client.verifyIdToken({
-      idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-    payload = ticket.getPayload();
+    const { tokens: t } = await client.getToken(code);
+    tokens = t;
   } catch (err) {
-    throw new ApiError(401, "Invalid Google token");
+    throw new ApiError(401, "Failed to exchange authorization code for tokens: " + err.message);
   }
 
-  const { sub: googleId, email, name, picture } = payload;
+  client.setCredentials(tokens);
+
+  let userInfo;
+  try {
+    // Fetch user info from Google using the access token
+    const response = await client.request({ url: 'https://www.googleapis.com/oauth2/v3/userinfo' });
+    userInfo = response.data;
+  } catch (err) {
+    throw new ApiError(401, "Failed to fetch user info with tokens");
+  }
+
+  const { sub: googleId, email, name, picture } = userInfo;
 
   // Check if user already exists by googleId or email
   let user = await User.findOne({ $or: [{ googleId }, { email }] });
 
   if (user) {
-    // Link googleId if missing (e.g. user registered with email first)
+    // Link googleId if missing
     if (!user.googleId) {
       user.googleId = googleId;
-      await user.save({ validateBeforeSave: false });
     }
+    // Update Google tokens
+    user.googleAccessToken = tokens.access_token;
+    if (tokens.refresh_token) {
+      user.googleRefreshToken = tokens.refresh_token;
+    }
+    await user.save({ validateBeforeSave: false });
   } else {
     // Create a new user with a unique username derived from email
     const baseUsername = email.split("@")[0].replace(/[^a-z0-9_]/gi, "_").toLowerCase();
@@ -133,6 +67,8 @@ export const googleAuth = asyncHandler(async (req, res) => {
       username,
       email,
       googleId,
+      googleAccessToken: tokens.access_token,
+      googleRefreshToken: tokens.refresh_token,
     });
   }
 

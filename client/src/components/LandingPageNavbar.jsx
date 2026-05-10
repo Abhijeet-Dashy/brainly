@@ -11,8 +11,7 @@ const LandingPageNavbar = () => {
 
   return (
     <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-5xl px-4">
-      <div className="bg-[#f5f5f5]/60 backdrop-blur-xl dark:bg-[#0a0a0a]/60 backdrop-blur-xl border-2 border-black dark:border-white shadow-[4px_4px_0_0_rgba(0,0,0,1)] dark:shadow-[4px_4px_0_0_rgba(255,255,255,1)] rounded-xl font-inter flex justify-between items-center px-6 py-3 transition-colors">
-        {/* LEFT */}
+      <div className="bg-[#f5f5f5]/20 backdrop-blur-md dark:bg-[#0a0a0a]/20 backdrop-blur-md border-2 border-black dark:border-white shadow-[4px_4px_0_0_rgba(0,0,0,1)] dark:shadow-[4px_4px_0_0_rgba(255,255,255,1)] rounded-xl font-inter flex justify-between items-center px-6 py-3 transition-colors">
         <div className="flex items-center gap-3 sm:gap-8">
           <span className="text-xl font-black tracking-tight text-black dark:text-white uppercase transition-colors">
             Brainly
@@ -60,16 +59,10 @@ const LandingPageNavbar = () => {
           ) : (
             <div className="flex items-center gap-3">
               <button
-                className="px-4 py-2 rounded-lg text-sm font-bold border-2 border-black dark:border-white bg-[#f5f5f5] dark:bg-[#0a0a0a] text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black hover:shadow-[4px_4px_0_0_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0_0_rgba(255,255,255,1)] hover:-translate-y-1 transition-all active:translate-y-0 active:shadow-none uppercase"
+                className="px-4 py-2 rounded-lg text-sm font-bold border-2 border-black dark:border-white bg-black dark:bg-white text-white dark:text-black hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white hover:shadow-[4px_4px_0_0_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0_0_rgba(255,255,255,1)] hover:-translate-y-1 transition-all active:translate-y-0 active:shadow-none uppercase"
                 onClick={() => navigate("/login")}
               >
                 Login
-              </button>
-              <button
-                className="px-4 py-2 rounded-lg text-sm font-bold border-2 border-black dark:border-white bg-black dark:bg-white text-white dark:text-black hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white hover:shadow-[4px_4px_0_0_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0_0_rgba(255,255,255,1)] hover:-translate-y-1 transition-all active:translate-y-0 active:shadow-none uppercase hidden sm:block"
-                onClick={() => navigate("/register")}
-              >
-                Get Started
               </button>
             </div>
           )}
