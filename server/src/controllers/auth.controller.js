@@ -86,3 +86,71 @@ export const loginUser = asyncHandler(async (req, res) => {
     }, "User logged in successfully")
   );
 });
+
+export const googleAuth = asyncHandler(async (req, res) => {
+  const { credential } = req.body;
+
+  if (!credential) {
+    throw new ApiError(400, "Google credential is required");
+  }
+
+  const { OAuth2Client } = await import("google-auth-library");
+  const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+  let payload;
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    payload = ticket.getPayload();
+  } catch (err) {
+    throw new ApiError(401, "Invalid Google token");
+  }
+
+  const { sub: googleId, email, name, picture } = payload;
+
+  // Check if user already exists by googleId or email
+  let user = await User.findOne({ $or: [{ googleId }, { email }] });
+
+  if (user) {
+    // Link googleId if missing (e.g. user registered with email first)
+    if (!user.googleId) {
+      user.googleId = googleId;
+      await user.save({ validateBeforeSave: false });
+    }
+  } else {
+    // Create a new user with a unique username derived from email
+    const baseUsername = email.split("@")[0].replace(/[^a-z0-9_]/gi, "_").toLowerCase();
+    let username = baseUsername;
+    let counter = 1;
+    while (await User.findOne({ username })) {
+      username = `${baseUsername}_${counter}`;
+      counter++;
+    }
+
+    user = await User.create({
+      username,
+      email,
+      googleId,
+    });
+  }
+
+  const accessToken = user.generateAccessToken();
+  const refreshToken = user.generateRefreshToken();
+
+  user.refreshToken = refreshToken;
+  await user.save({ validateBeforeSave: false });
+
+  return res.status(200).json(
+    new ApiResponse(200, {
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+      },
+      accessToken,
+      refreshToken,
+    }, "Google authentication successful")
+  );
+});

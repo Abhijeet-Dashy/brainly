@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
+import { GoogleLogin } from "@react-oauth/google";
 import toast from "react-hot-toast";
 
 export default function AuthPage() {
@@ -18,7 +19,20 @@ export default function AuthPage() {
 
   const login = useAuthStore((state) => state.login);
   const register = useAuthStore((state) => state.register);
+  const loginWithGoogle = useAuthStore((state) => state.loginWithGoogle);
   const navigate = useNavigate();
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setLoading(true);
+    const res = await loginWithGoogle(credentialResponse.credential);
+    if (res.success) {
+      toast.success("Welcome!");
+      navigate("/dashboard");
+    } else {
+      toast.error(res.error || "Google login failed");
+    }
+    setLoading(false);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -243,6 +257,25 @@ export default function AuthPage() {
               )}
             </button>
           </form>
+
+          {/* Divider */}
+          <div className="flex items-center gap-4 my-8">
+            <div className="flex-1 h-[3px] bg-black dark:bg-white transition-colors"></div>
+            <span className="text-sm font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Or</span>
+            <div className="flex-1 h-[3px] bg-black dark:bg-white transition-colors"></div>
+          </div>
+
+          {/* Google Login */}
+          <div className="w-full flex justify-center border-[3px] border-black dark:border-white bg-white dark:bg-[#1a1a1a] shadow-[6px_6px_0_0_rgba(0,0,0,1)] dark:shadow-[6px_6px_0_0_rgba(255,255,255,1)] hover:-translate-y-1 transition-all p-1">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => toast.error("Google login failed")}
+              size="large"
+              width="100%"
+              text="continue_with"
+              shape="rectangular"
+            />
+          </div>
 
           {/* Footer links */}
           <div className="mt-16 flex gap-6 text-xs font-black tracking-widest uppercase text-gray-500 dark:text-gray-500 justify-center lg:justify-start">
