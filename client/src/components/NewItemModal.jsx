@@ -62,12 +62,12 @@ export default function NewItemModal({
             Resource Type
           </label>
           <div className="flex border-2 border-black dark:border-white shadow-[2px_2px_0_0_rgba(0,0,0,1)] dark:shadow-[2px_2px_0_0_rgba(255,255,255,1)]">
-            {["text", "link", "image"].map((t, index) => (
+            {["text", "link", "image", "code"].map((t, index, arr) => (
               <button
                 key={t}
                 type="button"
                 onClick={() => setType(t)}
-                className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest transition-colors ${index !== 2 ? "border-r-2 border-black dark:border-white" : ""} ${
+                className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest transition-colors ${index !== arr.length - 1 ? "border-r-2 border-black dark:border-white" : ""} ${
                   type === t
                     ? "bg-black dark:bg-white text-white dark:text-black hover:bg-black"
                     : "bg-[#f5f5f5] dark:bg-[#0a0a0a] text-gray-500 hover:text-black dark:hover:text-white"
@@ -94,7 +94,9 @@ export default function NewItemModal({
                 ? "HTTPS://..."
                 : type === "image"
                   ? "IMAGE URL..."
-                  : "ENTER TEXT BLOCK..."
+                  : type === "code"
+                    ? "PASTE CODE SNIPPET..."
+                    : "ENTER TEXT BLOCK..."
             }
             required
           />

@@ -56,4 +56,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     .catch(err => sendResponse({ success: false, message: err.message }));
     return true; // Keep the message channel open for async response
   }
+
+  if (request.action === "CREATE_FOLDER") {
+    fetch("https://devlink-v9e2.onrender.com/api/folders", {
+      method: "POST",
+      headers: { 
+        "Authorization": `Bearer ${request.token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ name: request.name })
+    })
+    .then(res => res.json())
+    .then(data => sendResponse(data))
+    .catch(err => sendResponse({ success: false, message: err.message }));
+    return true;
+  }
 });

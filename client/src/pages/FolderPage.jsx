@@ -313,7 +313,9 @@ export default function FolderPage() {
                       ? "link"
                       : item.type === "image"
                         ? "image"
-                        : "description"
+                        : item.type === "code"
+                          ? "code"
+                          : "description"
                   }
                   color={
                     idx % 3 === 0

@@ -2,21 +2,23 @@ const API_URL = "https://devlink-v9e2.onrender.com/api";
 let toastTimeout;
 
 document.addEventListener("copy", async () => {
-    // Wait for the copy event text to register in the document selection bubble
+    // Capture selection synchronously before it gets cleared by copy action
+    const selectionObj = document.getSelection();
+    const selection = selectionObj ? selectionObj.toString().trim() : "";
+    const rect = (selectionObj && selectionObj.rangeCount > 0) ? selectionObj.getRangeAt(0).getBoundingClientRect() : null;
+    
+    if (!selection) return;
+    
+    // Small delay to let copy complete, then show the toast
     setTimeout(async () => {
        try {
-           const selection = document.getSelection().toString().trim();
-           if (!selection) return;
-           
             // Check if Brainly Extension is Authenticated
            const { token, lastUsedFolderId } = await chrome.storage.local.get(["token", "lastUsedFolderId"]);
 
             // Stash locally in case they open popup instead
-           chrome.storage.local.set({ copiedData: selection, copiedType: "text" });
+           chrome.storage.local.set({ copiedData: selection, copiedType: detectType(selection) });
            
            // Inject Floating Prompt
-           const selectionObj = document.getSelection();
-           const rect = selectionObj.rangeCount > 0 ? selectionObj.getRangeAt(0).getBoundingClientRect() : null;
            showBrainlyToast(selection, token || null, lastUsedFolderId || null, rect);
        } catch(error) { 
            console.warn("Brainly Auto-Capture Error", error); 
@@ -118,12 +120,43 @@ function showBrainlyToast(text, token, lastUsedFolderId, rect) {
       
       .label-text { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 2px solid #000; padding-bottom: 2px;}
       
+      .select-row { display: flex; gap: 6px; align-items: stretch; }
+      .select-row select { flex: 1; }
+      
       select {
-          width: 100%; border: 2px solid #000; padding: 8px 10px;
+          border: 2px solid #000; padding: 8px 10px;
           background: #fff; font-size: 10px; font-weight: bold; text-transform: uppercase;
           outline: none; cursor: pointer; transition: 0.2s;
       }
       select:focus { box-shadow: 3px 3px 0 0 #000; }
+
+      .add-dir-btn {
+          border: 2px solid #000; background: #fff; color: #000;
+          padding: 0 8px; font-size: 14px; font-weight: 900; cursor: pointer;
+          transition: all 0.1s; display: flex; align-items: center; justify-content: center;
+          min-width: 32px;
+      }
+      .add-dir-btn:hover { background: #000; color: #fff; }
+      .add-dir-btn:active { box-shadow: none; transform: translateY(1px); }
+      
+      .new-dir-row {
+          display: flex; gap: 6px; align-items: stretch;
+      }
+      .new-dir-input {
+          flex: 1; border: 2px solid #000; padding: 6px 8px;
+          background: #fff; font-size: 10px; font-weight: bold; text-transform: uppercase;
+          outline: none; font-family: inherit;
+      }
+      .new-dir-input:focus { box-shadow: 3px 3px 0 0 #000; }
+      .new-dir-input::placeholder { color: #999; }
+      .new-dir-create-btn {
+          border: 2px solid #000; background: #000; color: #fff;
+          padding: 6px 10px; font-size: 9px; font-weight: 900; text-transform: uppercase;
+          cursor: pointer; transition: all 0.1s; white-space: nowrap;
+      }
+      .new-dir-create-btn:hover { background: #fff; color: #000; }
+      .new-dir-create-btn:active { transform: translateY(1px); }
+      .new-dir-create-btn:disabled { opacity: 0.7; pointer-events: none; }
       
       .commit-btn {
           width: 100%; padding: 10px; border: 2px solid #000; background: #000; color: #fff;
@@ -149,9 +182,16 @@ function showBrainlyToast(text, token, lastUsedFolderId, rect) {
       </div>
       <div class="toast-body hidden" id="toastBody">
          <span class="label-text">Select Destination</span>
-         <select id="folderSelect">
-            <option value="" disabled selected>Ping Brainly...</option>
-         </select>
+         <div class="select-row">
+            <select id="folderSelect">
+               <option value="" disabled selected>Ping Brainly...</option>
+            </select>
+            <button class="add-dir-btn" id="addDirBtn" title="Create new directory">+</button>
+         </div>
+         <div class="new-dir-row hidden" id="newDirRow">
+            <input class="new-dir-input" id="newDirInput" type="text" placeholder="DIR NAME..." maxlength="30" />
+            <button class="new-dir-create-btn" id="newDirCreateBtn">INIT</button>
+         </div>
          <button class="commit-btn" id="commitBtn">Commit Block</button>
       </div>
    `;
@@ -164,11 +204,80 @@ function showBrainlyToast(text, token, lastUsedFolderId, rect) {
    const initialBtn = shadow.getElementById("initialSaveBtn");
    const folderSelect = shadow.getElementById("folderSelect");
    const commitBtn = shadow.getElementById("commitBtn");
+   const addDirBtn = shadow.getElementById("addDirBtn");
+   const newDirRow = shadow.getElementById("newDirRow");
+   const newDirInput = shadow.getElementById("newDirInput");
+   const newDirCreateBtn = shadow.getElementById("newDirCreateBtn");
 
    // Auto-dismiss the toast if they ignore it
    toastTimeout = setTimeout(() => {
        if(host) host.remove();
    }, 5000);
+
+   // Toggle new directory input
+   addDirBtn.addEventListener("click", () => {
+      const isVisible = !newDirRow.classList.contains("hidden");
+      if (isVisible) {
+         newDirRow.classList.add("hidden");
+         addDirBtn.textContent = "+";
+      } else {
+         newDirRow.classList.remove("hidden");
+         addDirBtn.textContent = "×";
+         newDirInput.focus();
+      }
+   });
+
+   // Create new directory
+   newDirCreateBtn.addEventListener("click", async () => {
+      const name = newDirInput.value.trim();
+      if (!name) return;
+
+      newDirCreateBtn.textContent = "...";
+      newDirCreateBtn.disabled = true;
+
+      try {
+         const data = await chrome.runtime.sendMessage({
+            action: "CREATE_FOLDER",
+            token,
+            name
+         });
+
+         if (data && data.success) {
+            // Add to dropdown and select it
+            const opt = document.createElement("option");
+            opt.value = data.data._id;
+            opt.textContent = data.data.name;
+            folderSelect.appendChild(opt);
+            folderSelect.value = data.data._id;
+            
+            // Reset UI
+            newDirInput.value = "";
+            newDirRow.classList.add("hidden");
+            addDirBtn.textContent = "+";
+            newDirCreateBtn.textContent = "INIT";
+            newDirCreateBtn.disabled = false;
+            commitBtn.textContent = "COMMIT BLOCK";
+         } else {
+            throw new Error(data?.message || "Failed");
+         }
+      } catch(e) {
+         newDirCreateBtn.textContent = "ERR";
+         newDirCreateBtn.style.background = "#dc2626";
+         setTimeout(() => {
+            newDirCreateBtn.textContent = "INIT";
+            newDirCreateBtn.style.background = "#000";
+            newDirCreateBtn.disabled = false;
+         }, 1500);
+      }
+   });
+
+   // Enter key to submit new directory
+   newDirInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+         e.preventDefault();
+         newDirCreateBtn.click();
+      }
+   });
 
    // Expand interface
    initialBtn.addEventListener("click", async () => {
@@ -218,6 +327,10 @@ function showBrainlyToast(text, token, lastUsedFolderId, rect) {
             updateCommitBtnText();
             folderSelect.addEventListener("change", updateCommitBtnText);
             
+            initialBtn.textContent = "LINKED";
+         } else if (data && data.success && data.data.length === 0) {
+            // No folders yet — show empty dropdown and let user create one
+            folderSelect.innerHTML = '<option value="" disabled selected>NO DIRS — CREATE ONE</option>';
             initialBtn.textContent = "LINKED";
          } else {
             throw new Error();

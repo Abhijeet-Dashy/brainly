@@ -80,7 +80,9 @@ export default function Items({
                   ? "link"
                   : item.type === "image"
                     ? "image"
-                    : "description"}
+                    : item.type === "code"
+                      ? "code"
+                      : "description"}
               </span>
             </div>
             <div>
