@@ -11,33 +11,25 @@ export default function AuthPage() {
   const [searchParams] = useSearchParams();
   const codeHandled = useRef(false);
 
-  // Handle the redirect callback — Google sends ?code=... back to this page
-  useEffect(() => {
-    const code = searchParams.get("code");
-    if (code && !codeHandled.current) {
-      codeHandled.current = true;
-      (async () => {
-        setLoading(true);
-        const redirect_uri = window.location.origin + '/login';
-        const res = await loginWithGoogle(code, redirect_uri);
-        if (res.success) {
-          toast.success("Welcome!");
-          navigate("/dashboard", { replace: true });
-        } else {
-          toast.error(res.error || "Google login failed");
-          // Clean the URL
-          window.history.replaceState({}, "", "/login");
-        }
-        setLoading(false);
-      })();
-    }
-  }, [searchParams]);
-
   const handleGoogleLogin = useGoogleLogin({
     flow: 'auth-code',
     scope: 'https://www.googleapis.com/auth/drive.file',
-    ux_mode: 'redirect',
-    redirect_uri: window.location.origin + '/login',
+    ux_mode: 'popup',
+    onSuccess: async (codeResponse) => {
+      setLoading(true);
+      const res = await loginWithGoogle(codeResponse.code, 'postmessage');
+      if (res.success) {
+        toast.success("Welcome!");
+        navigate("/dashboard", { replace: true });
+      } else {
+        toast.error(res.error || "Google login failed");
+      }
+      setLoading(false);
+    },
+    onError: (errorResponse) => {
+      console.error(errorResponse);
+      toast.error("Google login failed");
+    }
   });
 
   return (
