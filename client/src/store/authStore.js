@@ -23,12 +23,12 @@ export const useAuthStore = create((set, get) => ({
   },
 
 
-  loginWithGoogle: async (code) => {
+  loginWithGoogle: async (code, redirect_uri) => {
     try {
       const response = await fetch(`${BASE_URL}/api/auth/google`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code, redirect_uri }),
       });
 
       const data = await response.json();

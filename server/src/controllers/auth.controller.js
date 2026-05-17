@@ -5,7 +5,7 @@ import { User } from "../models/user.model.js";
 import { OAuth2Client } from "google-auth-library";
 
 export const googleAuth = asyncHandler(async (req, res) => {
-  const { code } = req.body;
+  const { code, redirect_uri } = req.body;
 
   if (!code) {
     throw new ApiError(400, "Authorization code is required");
@@ -15,7 +15,7 @@ export const googleAuth = asyncHandler(async (req, res) => {
   const client = new OAuth2Client(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    'postmessage'
+    redirect_uri || 'postmessage'
   );
 
   let tokens;

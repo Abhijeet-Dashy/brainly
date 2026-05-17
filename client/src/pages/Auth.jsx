@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 import { useGoogleLogin } from "@react-oauth/google";
 import toast from "react-hot-toast";
@@ -8,24 +8,36 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const loginWithGoogle = useAuthStore((state) => state.loginWithGoogle);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const codeHandled = useRef(false);
+
+  // Handle the redirect callback — Google sends ?code=... back to this page
+  useEffect(() => {
+    const code = searchParams.get("code");
+    if (code && !codeHandled.current) {
+      codeHandled.current = true;
+      (async () => {
+        setLoading(true);
+        const redirect_uri = window.location.origin + '/login';
+        const res = await loginWithGoogle(code, redirect_uri);
+        if (res.success) {
+          toast.success("Welcome!");
+          navigate("/dashboard", { replace: true });
+        } else {
+          toast.error(res.error || "Google login failed");
+          // Clean the URL
+          window.history.replaceState({}, "", "/login");
+        }
+        setLoading(false);
+      })();
+    }
+  }, [searchParams]);
 
   const handleGoogleLogin = useGoogleLogin({
     flow: 'auth-code',
     scope: 'https://www.googleapis.com/auth/drive.file',
-    onSuccess: async (codeResponse) => {
-      setLoading(true);
-      const res = await loginWithGoogle(codeResponse.code);
-      if (res.success) {
-        toast.success("Welcome!");
-        navigate("/dashboard");
-      } else {
-        toast.error(res.error || "Google login failed");
-      }
-      setLoading(false);
-    },
-    onError: () => {
-      toast.error("Google login failed");
-    }
+    ux_mode: 'redirect',
+    redirect_uri: window.location.origin + '/login',
   });
 
   return (
