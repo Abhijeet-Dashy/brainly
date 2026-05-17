@@ -5,7 +5,8 @@
   "permissions": ["storage", "activeTab", "scripting", "contextMenus"],
   "host_permissions": [
     "https://devlink-v9e2.onrender.com/*",
-    "https://devlink-mauve.vercel.app/*"
+    "https://devlink-mauve.vercel.app/*",
+    "http://localhost:*/*"
   ],
   "background": {
     "service_worker": "background.js"

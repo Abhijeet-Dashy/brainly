@@ -64,135 +64,111 @@ function showBrainlyToast(text, token, lastUsedFolderId, rect) {
    // Create isolated Shadow DOM
    const shadow = host.attachShadow({ mode: "open" });
 
-   // Brutalist CSS isolated to Shadow DOM
+   // Minimal CSS isolated to Shadow DOM
    const style = document.createElement("style");
    style.textContent = `
       * { box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 0; }
       .toast-container {
-          width: 300px;
-          background: #f5f5f5;
-          border: 4px solid #000;
-          box-shadow: 6px 6px 0 0 rgba(0,0,0,1);
+          width: 100px;
+          background: #fff;
+          border: 2px solid #000;
+          box-shadow: 2px 2px 0 0 rgba(0,0,0,0.8);
+          border-radius: 4px;
           color: #000;
           display: flex;
           flex-direction: column;
-          animation: slideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          animation: slideIn 0.2s ease-out;
+          overflow: hidden;
       }
       @keyframes slideIn {
-          from { transform: translateX(120%); opacity: 0; }
-          to { transform: translateX(0); opacity: 1; }
-      }
-      .halftone {
-          position: absolute; top:0; left:0; right:0; bottom:0; z-index: 0; pointer-events: none; opacity: 0.15;
-          background-image: radial-gradient(circle, #000 1.5px, transparent 1.5px);
-          background-size: 8px 8px;
+          from { transform: translateY(10px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
       }
       .toast-header {
-          position: relative; z-index: 10;
           display: flex; align-items: center; justify-content: space-between;
-          padding: 10px 12px;
-          background: #e5e5e5;
-          border-bottom: 3px solid #000;
+          padding: 8px;
+          background: #f9f9f9;
+          border-bottom: 1px solid #eaeaea;
       }
-      .brand-group { display: flex; align-items: center; gap: 8px; }
+      .brand-group { display: flex; align-items: center; gap: 6px; }
       .logo {
-          width: 22px; height: 22px;
-          border: 2px solid #000; background: #fff;
+          width: 16px; height: 16px;
+          background: #000; color: #fff; border-radius: 3px;
           display: flex; align-items: center; justify-content: center;
-          font-size: 9px; font-weight: 900; box-shadow: 2px 2px 0 0 #000;
+          font-size: 10px; font-weight: 900;
       }
-      .title { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; line-height: 1; }
+      .title { font-size: 11px; font-weight: 700; color: #333; }
       
       .save-btn {
-          border: 2px solid #000; background: #000; color: #fff;
-          padding: 6px 10px; font-size: 9px; font-weight: 900; text-transform: uppercase;
-          cursor: pointer; box-shadow: 2px 2px 0 0 #000; transition: all 0.1s;
+          border: 1px solid #000; background: #fff; color: #000; border-radius: 3px;
+          padding: 4px 8px; font-size: 10px; font-weight: 700;
+          cursor: pointer; transition: all 0.1s;
       }
-      .save-btn:hover { background: #fff; color: #000; }
-      .save-btn:active { box-shadow: none; transform: translateY(2px); }
-      .save-btn:disabled { opacity: 0.7; pointer-events: none; }
+      .save-btn:hover { background: #000; color: #fff; }
+      .save-btn:active { transform: translateY(1px); }
+      .save-btn:disabled { opacity: 0.5; pointer-events: none; }
       
       .toast-body { 
-          position: relative; z-index: 10;
-          padding: 16px; display: flex; flex-direction: column; gap: 10px; 
+          padding: 8px; display: flex; flex-direction: column; gap: 8px; 
+          background: #fff;
       }
       .hidden { display: none !important; }
       
-      .label-text { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 2px solid #000; padding-bottom: 2px;}
-      
-      .select-row { display: flex; gap: 6px; align-items: stretch; }
+      .select-row { display: flex; gap: 4px; align-items: stretch; }
       .select-row select { flex: 1; }
       
       select {
-          border: 2px solid #000; padding: 8px 10px;
-          background: #fff; font-size: 10px; font-weight: bold; text-transform: uppercase;
-          outline: none; cursor: pointer; transition: 0.2s;
+          border: 1px solid #ccc; border-radius: 3px; padding: 6px;
+          background: #fff; font-size: 11px; color: #333;
+          outline: none; cursor: pointer;
       }
-      select:focus { box-shadow: 3px 3px 0 0 #000; }
+      select:focus { border-color: #000; }
 
-      .add-dir-btn {
-          border: 2px solid #000; background: #fff; color: #000;
-          padding: 0 8px; font-size: 14px; font-weight: 900; cursor: pointer;
-          transition: all 0.1s; display: flex; align-items: center; justify-content: center;
-          min-width: 32px;
+      .icon-btn {
+          border: 1px solid #ccc; background: #f5f5f5; color: #333; border-radius: 3px;
+          padding: 0 6px; font-size: 14px; font-weight: bold; cursor: pointer;
+          min-width: 28px; display: flex; align-items: center; justify-content: center;
       }
-      .add-dir-btn:hover { background: #000; color: #fff; }
-      .add-dir-btn:active { box-shadow: none; transform: translateY(1px); }
+      .icon-btn:hover { background: #e0e0e0; border-color: #999; }
       
-      .new-dir-row {
-          display: flex; gap: 6px; align-items: stretch;
-      }
+      .new-dir-row { display: flex; gap: 4px; align-items: stretch; }
       .new-dir-input {
-          flex: 1; border: 2px solid #000; padding: 6px 8px;
-          background: #fff; font-size: 10px; font-weight: bold; text-transform: uppercase;
-          outline: none; font-family: inherit;
+          flex: 1; border: 1px solid #ccc; border-radius: 3px; padding: 6px;
+          background: #fff; font-size: 11px; outline: none;
       }
-      .new-dir-input:focus { box-shadow: 3px 3px 0 0 #000; }
-      .new-dir-input::placeholder { color: #999; }
-      .new-dir-create-btn {
-          border: 2px solid #000; background: #000; color: #fff;
-          padding: 6px 10px; font-size: 9px; font-weight: 900; text-transform: uppercase;
-          cursor: pointer; transition: all 0.1s; white-space: nowrap;
-      }
-      .new-dir-create-btn:hover { background: #fff; color: #000; }
-      .new-dir-create-btn:active { transform: translateY(1px); }
-      .new-dir-create-btn:disabled { opacity: 0.7; pointer-events: none; }
+      .new-dir-input:focus { border-color: #000; }
       
       .commit-btn {
-          width: 100%; padding: 10px; border: 2px solid #000; background: #000; color: #fff;
-          font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em;
-          cursor: pointer; box-shadow: 4px 4px 0 0 #000; transition: 0.1s;
+          width: 100%; padding: 8px; border: none; background: #000; color: #fff; border-radius: 3px;
+          font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.1s;
       }
-      .commit-btn:hover { box-shadow: 6px 6px 0 0 #000; transform: translateY(-1px); }
-      .commit-btn:active { box-shadow: none; transform: translateY(2px); }
-      .commit-btn:disabled { opacity: 0.7; pointer-events: none; }
+      .commit-btn:hover { background: #333; }
+      .commit-btn:active { transform: translateY(1px); }
+      .commit-btn:disabled { opacity: 0.5; pointer-events: none; }
    `;
 
    const container = document.createElement("div");
    container.className = "toast-container";
    
    container.innerHTML = `
-      <div class="halftone"></div>
       <div class="toast-header" id="toastHeader">
          <div class="brand-group">
-            <div class="logo">DL</div>
-            <span class="title">CONSOLE</span>
+            <div class="logo">B</div>
          </div>
-         <button class="save-btn" id="initialSaveBtn">CAPTURE</button>
+         <button class="save-btn" id="initialSaveBtn">Capture</button>
       </div>
       <div class="toast-body hidden" id="toastBody">
-         <span class="label-text">Select Destination</span>
          <div class="select-row">
             <select id="folderSelect">
-               <option value="" disabled selected>Ping Brainly...</option>
+               <option value="" disabled selected>Loading...</option>
             </select>
-            <button class="add-dir-btn" id="addDirBtn" title="Create new directory">+</button>
+            <button class="icon-btn" id="addDirBtn" title="New Folder">+</button>
          </div>
          <div class="new-dir-row hidden" id="newDirRow">
-            <input class="new-dir-input" id="newDirInput" type="text" placeholder="DIR NAME..." maxlength="30" />
-            <button class="new-dir-create-btn" id="newDirCreateBtn">INIT</button>
+            <input class="new-dir-input" id="newDirInput" type="text" placeholder="Folder Name" maxlength="30" />
+            <button class="icon-btn" id="newDirCreateBtn">✓</button>
          </div>
-         <button class="commit-btn" id="commitBtn">Commit Block</button>
+         <button class="commit-btn" id="commitBtn">Commit</button>
       </div>
    `;
 
