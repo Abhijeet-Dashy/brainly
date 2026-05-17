@@ -69,7 +69,9 @@ function showBrainlyToast(text, token, lastUsedFolderId, rect) {
    style.textContent = `
       * { box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; margin: 0; padding: 0; }
       .toast-container {
-          width: 100px;
+          width: max-content;
+          min-width: 150px;
+          max-width: 220px;
           background: #fff;
           border: 2px solid #000;
           box-shadow: 2px 2px 0 0 rgba(0,0,0,0.8);
